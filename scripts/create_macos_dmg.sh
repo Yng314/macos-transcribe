@@ -37,7 +37,7 @@ if [[ -n "${SIGNING_IDENTITY:-}" && "$SIGNING_IDENTITY" != "-" ]]; then
     --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" \
     --wait
   xcrun stapler staple "$SIGNED_DMG_PATH"
-  spctl -a -vv "$SIGNED_DMG_PATH"
+  xcrun stapler validate "$SIGNED_DMG_PATH"
   echo "Signed and notarized DMG ready:"
   echo "$SIGNED_DMG_PATH"
 else
