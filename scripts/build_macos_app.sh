@@ -26,6 +26,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 cp "$APP_DIR/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 cp "$BUILD_DIR/$EXECUTABLE_NAME" "$APP_BUNDLE/Contents/MacOS/$EXECUTABLE_NAME"
 chmod +x "$APP_BUNDLE/Contents/MacOS/$EXECUTABLE_NAME"
+cp "$APP_DIR/Sources/macos-app/Resources/menubar-icon.png" "$APP_BUNDLE/Contents/Resources/menubar-icon.png"
 
 RESOURCE_BUNDLE_PATH="$(find "$APP_DIR/.build" -name "$RESOURCE_BUNDLE_NAME" -type d | head -n 1)"
 if [[ -n "$RESOURCE_BUNDLE_PATH" ]]; then

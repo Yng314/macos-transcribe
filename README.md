@@ -23,6 +23,7 @@ The goal is to press the existing Dictation hardware key, record speech, send it
 - Runtime status is surfaced inside the menu bar app menu with a fixed-width layout, and the latest transcript can be copied directly from that menu.
 - A first-run setup guide now checks API config, Microphone permission, and Accessibility permission and provides direct actions for each.
 - A packaging script now builds a standalone `Young Transcribe.app` bundle with the supplied app icon, `Info.plist`, and microphone `audio-input` entitlement for hardened-runtime distribution.
+- The packaged app now loads its menu bar icon from the main app bundle resources instead of relying on a SwiftPM development-path fallback.
 
 ## Local Run
 

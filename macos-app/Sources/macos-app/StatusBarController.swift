@@ -137,7 +137,10 @@ final class StatusBarController {
     }
 
     private static func loadStatusIcon() -> NSImage? {
-        guard let sourceImage = Bundle.module.image(forResource: "menubar-icon") else {
+        guard
+            let iconURL = Bundle.main.resourceURL?.appendingPathComponent("menubar-icon.png"),
+            let sourceImage = NSImage(contentsOf: iconURL)
+        else {
             return nil
         }
 

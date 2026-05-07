@@ -9,6 +9,7 @@
 - `macos-app/Info.plist` defines the packaged app metadata, menu bar app mode, version, bundle id, and microphone usage string.
 - `macos-app/Transcribe.entitlements` defines the hardened-runtime entitlements required by the distributed app, including microphone audio input.
 - `macos-app/AppAssets/app-icon-source.png` stores the source image used for the packaged app icon.
+- `macos-app/Sources/macos-app/Resources/menubar-icon.png` is copied directly into the final app bundle and used by the menu bar item at runtime.
 - `macos-app/Sources/macos-app/AppMain.swift` starts the AppKit menu bar app.
 - `macos-app/Sources/macos-app/AppDelegate.swift` owns app lifecycle, hotkey flow, and settings reload.
 - `macos-app/Sources/macos-app/AppConfig.swift` loads and persists `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`.
@@ -39,6 +40,7 @@
 - `TextInsertionService` tries to replace the current selection in the focused input and falls back to a simulated paste with clipboard restoration.
 - The Python runner remains separate and is used only for API experimentation and cost or quality checks.
 - `scripts/build_macos_app.sh` wraps the release binary, resource bundle, `Info.plist`, generated `.icns`, and entitlement file into `macos-app/dist/Young Transcribe.app`.
+- `scripts/build_macos_app.sh` also copies the menu bar icon into `Contents/Resources` so the packaged app no longer depends on a developer-only SwiftPM resource lookup path.
 
 ## Key Design Decisions
 
