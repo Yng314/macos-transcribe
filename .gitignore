@@ -1,0 +1,14 @@
+.DS_Store
+.env
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+
+macos-app/.build/
+macos-app/dist/
+macos-app/Packages/
+macos-app/DerivedData/
+macos-app/xcuserdata/
+macos-app/.swiftpm/configuration/registries.json
+macos-app/.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
