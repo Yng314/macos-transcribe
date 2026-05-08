@@ -1,153 +1,197 @@
-# Transcribe
+# macos-transcribe
 
-This repo is building a lightweight macOS dictation replacement.
-The goal is to press the existing Dictation hardware key, record speech, send it to `gpt-4o-mini-transcribe`, and paste the text into the focused input.
+`macos-transcribe` is a lightweight replacement for Apple Dictation on macOS.
+Press the Dictation key, speak, press again, and your transcript is inserted into the current input field.
 
-## Project Overview
+Unlike a closed dictation service, this app lets you bring your own API key and optional base URL, so you can route transcription through the provider, gateway, or OpenAI-compatible endpoint that fits your cost, latency, and accuracy needs.
 
-- `run.py` is the existing lightweight multi-provider transcription runner for local audio comparison.
-- `macos-app/` is the new native macOS menu bar app that will replace Apple Dictation for this workflow.
-- `speech_sample/` contains sample audio used for API testing.
+## Why This Product Exists
 
-## Technical Architecture
+Apple Dictation is convenient, but it is also rigid.
+If you want better recognition, custom routing, your own API account, or a workflow built around modern speech-to-text models, the default macOS experience does not give you much room.
 
-- Python is used for quick API comparison and provider experiments.
-- Swift and AppKit are used for the menu bar app and system integration.
-- `hidutil` remaps the physical Dictation key to a normal function key that the app can listen for.
-- `AVAudioRecorder` is used for the first recording implementation and writes temporary `.m4a` files locally.
-- The macOS app can now store `OPENAI_API_KEY` and optional `OPENAI_BASE_URL` inside its own settings window and persists them under Application Support.
-- The settings window now separates `Personalization` from `API` and can store a reusable transcription hint prompt for domain terms and preferred spellings.
-- Accessibility APIs are used to insert text into the focused app, with a clipboard plus `Command+V` fallback when direct insertion fails.
-- When paste fallback is used, the app now restores the user's previous clipboard contents after the paste completes if the clipboard has not changed again.
-- The app plays built-in macOS recording start and stop sounds for immediate user feedback.
-- Runtime status is surfaced inside the menu bar app menu with a fixed-width layout, and the latest transcript can be copied directly from that menu.
-- A first-run setup guide now checks API config, Microphone permission, and Accessibility permission and provides direct actions for each.
-- A packaging script now builds a standalone `Young Transcribe.app` bundle with the supplied app icon, `Info.plist`, and microphone `audio-input` entitlement for hardened-runtime distribution.
-- The packaged app now loads its menu bar icon from the main app bundle resources instead of relying on a SwiftPM development-path fallback.
+`macos-transcribe` keeps the interaction model simple:
 
-## Local Run
+- Keep the familiar Dictation key workflow.
+- Replace the transcription backend.
+- Use your own endpoint and credentials.
+- Stay in the app you are already typing in.
 
-Python transcription runner:
+## What Makes It Different
+
+- Lightweight by design: no benchmark dataset, no analytics dashboard, no heavyweight client.
+- Native macOS workflow: menu bar app, not a browser wrapper.
+- Bring your own API: configure your own API key and optional base URL in Settings.
+- OpenAI-compatible routing: useful if you want to point the app at your own gateway or model provider.
+- Better control: add reusable terminology hints for names, jargon, and preferred spellings.
+- Practical fail-safes: retry the last recording if a transcription request fails.
+
+## Core Experience
+
+1. Launch the app from the menu bar.
+2. Press the physical Dictation key once to start recording.
+3. Press it again to stop.
+4. The app sends the audio to your configured transcription endpoint.
+5. The returned text is inserted into the currently focused input.
+
+The app automatically remaps the Dictation key to `F18` on launch and restores the default mapping when the app exits.
+
+## Product Capabilities
+
+- Dictation-key replacement without building a full input method.
+- Menu bar workflow with setup guidance and status feedback.
+- API key and base URL configuration stored locally in the app.
+- Personalization prompt for domain terms, names, and preferred spellings.
+- Accessibility-first text insertion with paste fallback when needed.
+- Clipboard restore after paste fallback, so the user’s clipboard is not left overwritten.
+- Optional mute-while-recording mode to reduce speaker bleed into the microphone.
+- Retry Last Recording action when the upstream transcription call fails.
+- Signed and notarized macOS distribution flow for external sharing.
+
+## Why Bring Your Own API Matters
+
+This project is intentionally not tied to a single hosted backend.
+
+That gives you flexibility to:
+
+- choose the provider you trust,
+- optimize for price or latency,
+- route through your own proxy or API gateway,
+- keep billing under your own account,
+- experiment with different compatible backends without changing the Dictation UX.
+
+Today, the macOS app is optimized around a `gpt-4o-mini-transcribe` style transcription request and can be pointed at compatible endpoints through the configured base URL.
+
+## Install
+
+Download the latest signed build from [Releases](https://github.com/Yng314/macos-transcribe/releases).
+
+Then:
+
+1. Open the DMG and move `Young Transcribe.app` into `/Applications`.
+2. Launch the app.
+3. Grant `Microphone` permission.
+4. Grant `Accessibility` permission so the app can insert text into other apps.
+5. Open `Settings...` from the menu bar icon.
+6. Paste your API key.
+7. Optionally set a custom base URL.
+
+The current default base URL is:
+
+```text
+https://api.bltcy.ai/v1
+```
+
+## Personalization
+
+The `Personalization` page lets you save a reusable prompt with:
+
+- product names,
+- technical terms,
+- team names,
+- preferred spellings,
+- words the model often gets wrong.
+
+This is useful when the model can hear the sound correctly but tends to choose the wrong written form.
+
+## Privacy And Control
+
+- Audio is recorded locally on your Mac.
+- Audio is sent only after you stop recording.
+- Requests go to the endpoint you configure.
+- There is no bundled hosted transcription backend in this repo.
+
+If you want stricter control, point the app at your own gateway or managed API layer.
+
+## First-Run Experience
+
+The built-in setup guide checks:
+
+- API configuration
+- Microphone permission
+- Accessibility permission
+
+This matters because the product is meant to be usable by non-developers, not only from `swift run`.
+
+## Built For Real-World Dictation
+
+This project focuses on the narrow workflow that matters:
+replace the weak part of the default dictation stack without forcing users into a new editor, a browser tool, or a full speech platform.
+
+If all you want is:
+
+- a hotkey,
+- a recording toggle,
+- a stronger transcription model,
+- and direct insertion into the current app,
+
+that is exactly the shape of this product.
+
+## For Developers
+
+This repository also includes a lightweight Python runner for direct audio-to-text API experiments.
+
+- `run.py` tests transcription providers against your own sample audio.
+- `macos-app/` contains the native macOS menu bar application.
+- `speech_sample/` contains sample audio assets for local testing.
+
+### Local Development
+
+Run the comparison script:
 
 ```bash
 python3 run.py
 ```
 
-macOS app build:
+Build the macOS app:
 
 ```bash
 cd macos-app
 swift build
 ```
 
-macOS app run:
+Run the macOS app:
 
 ```bash
 cd macos-app
 swift run
 ```
 
-Build standalone `.app`:
+Build a standalone app bundle:
 
 ```bash
 ./scripts/build_macos_app.sh
 ```
 
-Build signed `.app` with a specific identity:
+Build a signed and notarized release artifact:
 
 ```bash
-SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/build_macos_app.sh
+SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+NOTARY_KEYCHAIN_PROFILE="transcribe-notary" \
+./scripts/release_macos_app.sh
 ```
 
-The signed standalone app now includes the `com.apple.security.device.audio-input` entitlement so microphone permission can work correctly under hardened runtime.
+## Technical Notes
 
-Package zip for sharing:
+- The Dictation key is remapped with `hidutil`.
+- The app listens for `F18` after remapping.
+- Recording is handled with native macOS audio APIs.
+- Text insertion uses Accessibility APIs first, then a paste fallback when necessary.
+- The packaged app includes the hardened-runtime microphone entitlement `com.apple.security.device.audio-input`.
 
-```bash
-./scripts/package_macos_zip.sh
-```
+## Status
 
-Build DMG for sharing:
+Implemented today:
 
-```bash
-./scripts/create_macos_dmg.sh
-```
+- native menu bar dictation replacement,
+- packaged `.app` build,
+- signed and notarized DMG release flow,
+- API settings and personalization,
+- retry-last-recording flow,
+- onboarding for permissions and setup.
 
-One-step release build:
+Planned next:
 
-```bash
-SIGNING_IDENTITY="Developer ID Application: ..." NOTARY_KEYCHAIN_PROFILE="transcribe-notary" ./scripts/release_macos_app.sh
-```
-
-Notarize after signing:
-
-```bash
-NOTARY_KEYCHAIN_PROFILE="transcribe-notary" ./scripts/notarize_macos_app.sh
-```
-
-When the app starts recording for the first time, macOS should prompt for microphone access.
-When the app inserts text for the first time, macOS may prompt for Accessibility permission.
-When the app launches, it automatically remaps the physical Dictation key to `F18`.
-When the app exits, it automatically restores the default key mapping.
-If API settings are missing, use the menu bar icon and open `Settings…`.
-
-## Deployment And Commands
-
-- Standalone macOS app bundle output:
-
-```bash
-./scripts/build_macos_app.sh
-open macos-app/dist/Transcribe.app
-```
-
-- Manual key remap helper, mainly as a fallback:
-
-```bash
-./scripts/map_dictation_key_to_f18.sh
-```
-
-## Testing
-
-- Build the macOS app with `cd macos-app && swift build`.
-- Run the macOS app with `cd macos-app && swift run`.
-- Build the packaged app with `./scripts/build_macos_app.sh`.
-- Build the signed packaged app with `SIGNING_IDENTITY="Developer ID Application: ..."` when preparing external distribution.
-- Notarize with `NOTARY_KEYCHAIN_PROFILE="..." ./scripts/notarize_macos_app.sh`.
-- Build a shareable DMG with `./scripts/create_macos_dmg.sh`.
-- Use `./scripts/release_macos_app.sh` for the full signed + notarized release flow.
-- Verify the Python transcription runner with `python3 run.py`.
-- Verify the first-run setup guide flow from a clean launch.
-
-## Search Record
-
-- Apple Dictation cannot be replaced through a dedicated third-party API hook.
-- `hidutil` supports hardware-level key remapping through `UserKeyMapping`.
-- Spokenly documents a working Dictation-key remap flow using `hidutil`.
-- The practical path is `Dictation key -> hidutil remap -> app hotkey listener`.
-
-## Completed And Todo
-
-Completed:
-- Lightweight Python transcription comparison script for OpenAI and Qwen.
-- Verified `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, and `qwen3-asr-flash` on the provided sample audio.
-- Added a phase 1 native macOS app skeleton for Dictation-key replacement.
-- Added a phase 2 recording state machine that toggles recording with `F18` and saves temporary audio files.
-- Added a phase 3 direct OpenAI transcription path from the macOS app using `gpt-4o-mini-transcribe`.
-- Added a phase 4 insertion path that tries Accessibility first and falls back to pasteboard plus `Command+V`.
-- Added clipboard preservation and delayed restore for the paste fallback path.
-- Added built-in macOS start and stop recording sounds.
-- Replaced terminal-oriented logging with in-app menu state and recent-event history.
-- Moved Dictation-key remap lifecycle into the app so launch applies the remap and termination restores defaults.
-- Replaced the temporary menu bar text button with a branded icon and fixed-width menu layout.
-- Added an in-app settings window for API key and base URL persistence.
-- Added a `Personalization` settings page that stores a reusable transcription prompt and sends it to `gpt-4o-mini-transcribe` as `prompt`.
-- Added a standalone `Transcribe.app` packaging script and app icon source.
-- Added a first-run setup guide for configuration, Microphone permission, and Accessibility permission.
-- Added scripts for signed packaging, notarization, and shareable zip output.
-- Added the microphone `audio-input` entitlement to the signed app bundle so hardened-runtime builds can request microphone access correctly.
-
-Todo:
-- Verify the Dictation-key remap and `F18` listener on the local machine.
-- Verify focused-input insertion behavior across common macOS apps.
-- Add launch-at-login support.
-- Re-verify microphone permission flow on the signed `.app` and notarized DMG after adding the audio-input entitlement.
+- launch at login,
+- broader validation across more macOS target apps,
+- more configurable provider and model routing where compatible.
